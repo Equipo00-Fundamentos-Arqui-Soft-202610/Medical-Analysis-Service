@@ -1,4 +1,13 @@
+using MediTrack.MedicalAnalysisService.API.Application.Internal.CommandServices;
+using MediTrack.MedicalAnalysisService.API.Application.Internal.EventHandlers;
+using MediTrack.MedicalAnalysisService.API.Application.Internal.QueryServices;
+using MediTrack.MedicalAnalysisService.API.Domain.Model;
+using MediTrack.MedicalAnalysisService.API.Domain.Model.Services;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.DatasetProcessing;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.Messaging;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC;
 using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
+using MediTrack.MedicalAnalysisService.API.Interfaces.REST.Transform;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +18,46 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<MedicalAnalysisDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
+
+// Repositories
+builder.Services.AddScoped<IClinicalRecordRepository, ClinicalRecordRepository>();
+builder.Services.AddScoped<IAdherenceMetricRepository, AdherenceMetricRepository>();
+builder.Services.AddScoped<IComplianceStatisticRepository, ComplianceStatisticRepository>();
+builder.Services.AddScoped<IAdherenceAlertRepository, AdherenceAlertRepository>();
+
+// Command / Query services
+builder.Services.AddScoped<IClinicalDataCommandService, ClinicalDataCommandService>();
+builder.Services.AddScoped<IAdherenceMetricCommandService, AdherenceMetricCommandService>();
+builder.Services.AddScoped<IAlertCommandService, AlertCommandService>();
+builder.Services.AddScoped<IStatisticsQueryService, StatisticsQueryService>();
+builder.Services.AddScoped<IDashboardQueryService, DashboardQueryService>();
+builder.Services.AddScoped<IAlertQueryService, AlertQueryService>();
+builder.Services.AddScoped<IClinicalDataQueryService, ClinicalDataQueryService>();
+
+// Assemblers
+builder.Services.AddScoped<ClinicalDataCommandFromResourceAssembler>();
+builder.Services.AddScoped<ClinicalRecordResourceFromEntityAssembler>();
+builder.Services.AddScoped<AlertCommandFromResourceAssembler>();
+builder.Services.AddScoped<AlertResourceFromEntityAssembler>();
+builder.Services.AddScoped<StatisticsResourceFromAggregateAssembler>();
+builder.Services.AddScoped<DashboardResourceFromAggregateAssembler>();
+
+// Strategies + Factory
+builder.Services.AddScoped<MedicationAdherenceStrategy>();
+builder.Services.AddScoped<AppointmentAdherenceStrategy>();
+builder.Services.AddScoped<AdherenceCalculatorFactory>();
+
+// Dataset processing
+builder.Services.AddScoped<IDatasetProcessor, CsvDatasetProcessor>();
+
+// Event handlers
+builder.Services.AddScoped<ComplianceRegisteredEventHandler>();
+builder.Services.AddScoped<AppointmentAttendanceRegisteredEventHandler>();
+builder.Services.AddScoped<PrescriptionLoadedEventHandler>();
+
+// Event bus
+builder.Services.AddSingleton<IIntegrationEventBus, InMemoryEventBus>();
+builder.Services.AddHostedService<HostedEventConsumer>();
 
 var app = builder.Build();
 
