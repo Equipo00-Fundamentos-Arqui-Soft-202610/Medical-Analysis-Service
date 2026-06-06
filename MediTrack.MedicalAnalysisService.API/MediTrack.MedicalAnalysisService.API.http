@@ -1,6 +1,81 @@
-@MediTrack.MedicalAnalysisService.API_HostAddress = http://localhost:5074
+@MediTrack.MedicalAnalysisService.API_HostAddress = http://localhost:5188
 
-GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/weatherforecast/
+### ── CLINICAL RECORDS ────────────────────────────────────────────────────────
+
+### US14 — Registrar historial clínico manual
+POST {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/clinical-records
+Content-Type: application/json
+
+{
+  "patientId": 1,
+  "recordDate": "2026-06-01T00:00:00",
+  "diagnosis": "Hypertension stage 2",
+  "notes": "Patient reported headaches and fatigue"
+}
+
+###
+
+### US14 — Obtener historial clínico por paciente
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/clinical-records?patientId=1
 Accept: application/json
+
+###
+
+### ── STATISTICS ───────────────────────────────────────────────────────────────
+
+### US18 — Estadísticas de cumplimiento de medicación
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/statistics/compliance?category=medication&from=2026-01-01&to=2026-06-30
+Accept: application/json
+
+###
+
+### US18 — Estadísticas de cumplimiento de citas
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/statistics/compliance?category=appointment&from=2026-01-01&to=2026-06-30
+Accept: application/json
+
+###
+
+### US18 — Estadísticas de asistencia a citas
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/statistics/appointments?from=2026-01-01&to=2026-06-30
+Accept: application/json
+
+###
+
+### ── DASHBOARD ────────────────────────────────────────────────────────────────
+
+### US16 — Tendencia de adherencia por paciente
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/dashboards/adherence-trend?patientId=1&from=2026-01-01&to=2026-06-30
+Accept: application/json
+
+###
+
+### ── ALERTS ───────────────────────────────────────────────────────────────────
+
+### Listar todas las alertas
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/alerts
+Accept: application/json
+
+###
+
+### Listar alertas abiertas
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/alerts?status=open
+Accept: application/json
+
+###
+
+### Crear alerta manualmente
+POST {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/alerts
+Content-Type: application/json
+
+{
+  "patientId": 1,
+  "severity": "warning",
+  "reason": "Medication adherence dropped below 70% threshold"
+}
+
+###
+
+### Reconocer alerta
+PATCH {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/alerts/1/acknowledge
 
 ###
