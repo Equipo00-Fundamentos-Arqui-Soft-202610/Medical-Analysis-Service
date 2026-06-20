@@ -56,7 +56,8 @@ builder.Services.AddScoped<AppointmentAttendanceRegisteredEventHandler>();
 builder.Services.AddScoped<PrescriptionLoadedEventHandler>();
 
 // Event bus
-builder.Services.AddSingleton<IIntegrationEventBus, InMemoryEventBus>();
+builder.Services.Configure<RabbitMqOptions>(
+    builder.Configuration.GetSection(RabbitMqOptions.SectionName));
 builder.Services.AddHostedService<HostedEventConsumer>();
 
 var app = builder.Build();
