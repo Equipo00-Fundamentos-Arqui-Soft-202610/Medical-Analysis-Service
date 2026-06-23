@@ -68,11 +68,15 @@ public class ClinicalDataController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ClinicalRecordResource>>> GetClinicalHistory(
-        [FromQuery] int patientId)
+        [FromQuery] int patientId,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
     {
         try
         {
-            var records = await _queryService.HandleAsync(new GetClinicalHistoryByPatientIdQuery(patientId));
+            var records = await _queryService.HandleAsync(
+                new GetClinicalHistoryByPatientIdQuery(patientId, from, to));
+
             if (!records.Any())
                 return NotFound(new { message = $"No clinical records found for patient {patientId}" });
 
