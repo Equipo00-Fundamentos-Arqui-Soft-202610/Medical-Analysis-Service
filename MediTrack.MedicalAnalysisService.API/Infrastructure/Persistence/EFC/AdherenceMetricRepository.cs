@@ -1,5 +1,6 @@
 using MediTrack.MedicalAnalysisService.API.Domain.Model;
 using MediTrack.MedicalAnalysisService.API.Domain.Model.Aggregates;
+using MediTrack.MedicalAnalysisService.API.Domain.Model.ValueObjects;
 using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,8 +31,9 @@ public class AdherenceMetricRepository : IAdherenceMetricRepository
 
     public async Task<AdherenceMetric?> FindByPatientIdAndCategoryAsync(int patientId, string category)
     {
+        var categoryVO = ComplianceCategory.From(category);
         return await _context.AdherenceMetrics
-            .FirstOrDefaultAsync(m => m.PatientId == patientId && m.Category.Value == category);
+            .FirstOrDefaultAsync(m => m.PatientId == patientId && m.Category == categoryVO);
     }
 
     public async Task<IEnumerable<AdherenceMetric>> FindByPatientIdAsync(int patientId)
