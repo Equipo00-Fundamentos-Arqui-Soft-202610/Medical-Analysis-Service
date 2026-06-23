@@ -29,6 +29,14 @@ public class ClinicalRecordRepository : IClinicalRecordRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<ClinicalRecord>> FindByPatientIdAndDateRangeAsync(int patientId, DateTime from, DateTime to)
+    {
+        return await _context.ClinicalRecords
+            .Where(r => r.PatientId == patientId && r.RecordDate >= from && r.RecordDate <= to)
+            .OrderByDescending(r => r.RecordDate)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<ClinicalRecord>> FindByImportBatchIdAsync(string importBatchId)
     {
         return await _context.ClinicalRecords

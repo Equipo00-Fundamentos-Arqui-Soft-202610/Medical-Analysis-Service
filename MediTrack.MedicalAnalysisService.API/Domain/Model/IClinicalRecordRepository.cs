@@ -6,5 +6,6 @@ public interface IClinicalRecordRepository
 {
     Task<ClinicalRecord> AddAsync(ClinicalRecord record);
     Task<IEnumerable<ClinicalRecord>> FindByPatientIdAsync(int patientId);
+    Task<IEnumerable<ClinicalRecord>> FindByPatientIdAndDateRangeAsync(int patientId, DateTime from, DateTime to);
     Task<IEnumerable<ClinicalRecord>> FindByImportBatchIdAsync(string importBatchId);
 }

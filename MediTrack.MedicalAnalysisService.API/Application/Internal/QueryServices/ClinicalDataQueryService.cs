@@ -18,6 +18,15 @@ public class ClinicalDataQueryService : IClinicalDataQueryService
         if (query.PatientId <= 0)
             throw new ArgumentException("PatientId must be greater than 0", nameof(query.PatientId));
 
+        if (query.From.HasValue && query.To.HasValue)
+        {
+            if (query.From > query.To)
+                throw new ArgumentException("'from' date must be earlier than or equal to 'to' date");
+
+            return await _recordRepository.FindByPatientIdAndDateRangeAsync(
+                query.PatientId, query.From.Value, query.To.Value);
+        }
+
         return await _recordRepository.FindByPatientIdAsync(query.PatientId);
     }
 }

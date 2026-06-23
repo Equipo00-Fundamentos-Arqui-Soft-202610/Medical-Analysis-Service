@@ -1,22 +1,29 @@
-@MediTrack.MedicalAnalysisService.API_HostAddress = http://localhost:5188
+@MediTrack.MedicalAnalysisService.API_HostAddress = https://localhost:44386
 
 ### ── CLINICAL RECORDS ────────────────────────────────────────────────────────
 
 ### US14 — Registrar historial clínico manual
+
 POST {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/clinical-records
 Content-Type: application/json
 
 {
-  "patientId": 1,
-  "recordDate": "2026-06-01T00:00:00",
-  "diagnosis": "Hypertension stage 2",
+  "patientId": 2,
+  "recordDate": "2026-06-02T00:00:00",
+  "diagnosis": "High blood pressure",
   "notes": "Patient reported headaches and fatigue"
 }
 
 ###
 
-### US14 — Obtener historial clínico por paciente
+### US14 — Obtener historial clínico por paciente (todos los registros)
 GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/clinical-records?patientId=1
+Accept: application/json
+
+###
+
+### US17 — Filtrar historial clínico por rango de fechas
+GET {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/clinical-records?patientId=1&from=2026-01-01&to=2026-06-30
 Accept: application/json
 
 ###
@@ -79,3 +86,7 @@ Content-Type: application/json
 PATCH {{MediTrack.MedicalAnalysisService.API_HostAddress}}/api/v1/alerts/1/acknowledge
 
 ###
+
+
+
+
