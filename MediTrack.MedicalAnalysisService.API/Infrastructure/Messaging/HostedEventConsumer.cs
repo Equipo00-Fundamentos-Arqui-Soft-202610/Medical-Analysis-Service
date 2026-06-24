@@ -26,6 +26,11 @@ public class HostedEventConsumer : BackgroundService
         _logger = logger;
     }
 
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var factory = new ConnectionFactory
@@ -86,7 +91,7 @@ public class HostedEventConsumer : BackgroundService
                 {
                     case "ComplianceRegistered":
                     {
-                        var payload = JsonSerializer.Deserialize<ComplianceRegisteredIntegrationEvent>(json);
+                        var payload = JsonSerializer.Deserialize<ComplianceRegisteredIntegrationEvent>(json, JsonOptions);
                         if (payload != null)
                         {
                             var handler = scope.ServiceProvider.GetRequiredService<ComplianceRegisteredEventHandler>();
@@ -96,7 +101,7 @@ public class HostedEventConsumer : BackgroundService
                     }
                     case "AppointmentAttendanceRegistered":
                     {
-                        var payload = JsonSerializer.Deserialize<AppointmentAttendanceRegisteredIntegrationEvent>(json);
+                        var payload = JsonSerializer.Deserialize<AppointmentAttendanceRegisteredIntegrationEvent>(json, JsonOptions);
                         if (payload != null)
                         {
                             var handler = scope.ServiceProvider.GetRequiredService<AppointmentAttendanceRegisteredEventHandler>();
@@ -106,7 +111,7 @@ public class HostedEventConsumer : BackgroundService
                     }
                     case "PrescriptionLoaded":
                     {
-                        var payload = JsonSerializer.Deserialize<PrescriptionLoadedIntegrationEvent>(json);
+                        var payload = JsonSerializer.Deserialize<PrescriptionLoadedIntegrationEvent>(json, JsonOptions);
                         if (payload != null)
                         {
                             var handler = scope.ServiceProvider.GetRequiredService<PrescriptionLoadedEventHandler>();
