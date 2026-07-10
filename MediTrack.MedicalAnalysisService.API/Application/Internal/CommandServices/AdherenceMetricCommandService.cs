@@ -90,8 +90,10 @@ public class AdherenceMetricCommandService : IAdherenceMetricCommandService
             return;
 
         var severity = calculator.DetermineAlertSeverity(metric.Rate);
-        var reason = $"Adherence rate dropped to {metric.Rate.Value:F1}% (threshold: " +
-                     $"{(command.Category == "medication" ? "70" : "80")}%)";
+        var threshold = command.Category == "medication" ? "70" : "80";
+        var reason = $"La adherencia del paciente ha caído a {metric.Rate.Value:F1}% " +
+                     $"(umbral mínimo: {threshold}%). " +
+                     $"Ha faltado {metric.TotalMissed} de {metric.TotalScheduled} dosis programadas.";
 
         await _alertCommandService.HandleAsync(new RaiseAdherenceAlertCommand(
             command.PatientId, severity, reason));
