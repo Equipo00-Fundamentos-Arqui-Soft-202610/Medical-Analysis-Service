@@ -4,10 +4,12 @@ using MediTrack.MedicalAnalysisService.API.Domain.Model.Queries;
 using MediTrack.MedicalAnalysisService.API.Interfaces.REST.Resources;
 using MediTrack.MedicalAnalysisService.API.Interfaces.REST.Transform;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MediTrack.MedicalAnalysisService.API.Interfaces.REST.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/clinical-records")]
 public class ClinicalDataController : ControllerBase
 {

@@ -1,5 +1,6 @@
 using MediTrack.MedicalAnalysisService.API.Domain.Model;
 using MediTrack.MedicalAnalysisService.API.Domain.Model.Aggregates;
+using MediTrack.MedicalAnalysisService.API.Domain.Model.ValueObjects;
 using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,8 +41,12 @@ public class AdherenceAlertRepository : IAdherenceAlertRepository
                 .OrderByDescending(a => a.TriggeredAt)
                 .ToListAsync();
 
+        // Comparar el value object completo (no ".Value") -- EF Core no puede
+        // traducir el acceso a una propiedad anidada de un tipo value-converted,
+        // esto revienta con "could not be translated" en tiempo de ejecución.
+        var statusVO = AlertStatus.From(status);
         return await _context.AdherenceAlerts
-            .Where(a => a.Status.Value == status.ToLowerInvariant())
+            .Where(a => a.Status == statusVO)
             .OrderByDescending(a => a.TriggeredAt)
             .ToListAsync();
     }

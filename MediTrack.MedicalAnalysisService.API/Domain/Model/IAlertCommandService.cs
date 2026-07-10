@@ -7,4 +7,5 @@ public interface IAlertCommandService
 {
     Task<AdherenceAlert> HandleAsync(RaiseAdherenceAlertCommand command);
     Task<AdherenceAlert> HandleAsync(AcknowledgeAlertCommand command);
+    Task<bool> HasOpenAlertAsync(int patientId);
 }

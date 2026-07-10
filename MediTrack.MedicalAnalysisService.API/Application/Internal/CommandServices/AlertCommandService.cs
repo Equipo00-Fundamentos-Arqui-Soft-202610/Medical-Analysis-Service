@@ -28,4 +28,10 @@ public class AlertCommandService : IAlertCommandService
         alert.Acknowledge();
         return await _alertRepository.UpdateAsync(alert);
     }
+
+    public async Task<bool> HasOpenAlertAsync(int patientId)
+    {
+        var alerts = await _alertRepository.FindByPatientIdAsync(patientId);
+        return alerts.Any(a => a.Status.IsOpen);
+    }
 }
