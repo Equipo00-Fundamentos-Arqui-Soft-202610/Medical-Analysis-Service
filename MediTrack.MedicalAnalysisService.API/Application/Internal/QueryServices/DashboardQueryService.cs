@@ -27,4 +27,9 @@ public class DashboardQueryService : IDashboardQueryService
         // series de tiempo por paciente (fuera del alcance de este fix).
         return metrics.Where(m => m.LastUpdatedAt >= query.From && m.LastUpdatedAt <= query.To);
     }
+
+    public async Task<IEnumerable<AdherenceMetric>> HandleAsync(GetAllAdherenceMetricsQuery query)
+    {
+        return await _metricRepository.FindAllAsync();
+    }
 }

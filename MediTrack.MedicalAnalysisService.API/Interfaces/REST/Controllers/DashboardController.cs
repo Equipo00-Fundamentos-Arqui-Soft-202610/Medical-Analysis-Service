@@ -44,4 +44,11 @@ public class DashboardController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("all-adherence")]
+    public async Task<ActionResult<AllAdherenceMetricsResponse>> GetAllAdherence()
+    {
+        var metrics = await _queryService.HandleAsync(new GetAllAdherenceMetricsQuery());
+        return Ok(_assembler.ToAllResource(metrics));
+    }
 }

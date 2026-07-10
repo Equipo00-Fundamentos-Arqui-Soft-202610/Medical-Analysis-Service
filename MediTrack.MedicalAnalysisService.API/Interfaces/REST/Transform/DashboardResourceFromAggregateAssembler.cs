@@ -17,4 +17,18 @@ public class DashboardResourceFromAggregateAssembler
 
         return new AdherenceTrendResource(patientId, points);
     }
+
+    public AllAdherenceMetricsResponse ToAllResource(IEnumerable<AdherenceMetric> metrics)
+    {
+        var items = metrics.Select(m => new AllAdherenceMetricResource(
+            m.PatientId,
+            m.Category.Value,
+            m.TotalScheduled,
+            m.TotalCompliant,
+            m.TotalMissed,
+            m.Rate.Value,
+            m.LastUpdatedAt));
+
+        return new AllAdherenceMetricsResponse(items);
+    }
 }

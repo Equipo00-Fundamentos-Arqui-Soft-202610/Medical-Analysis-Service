@@ -42,4 +42,9 @@ public class AdherenceMetricRepository : IAdherenceMetricRepository
             .Where(m => m.PatientId == patientId)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<AdherenceMetric>> FindAllAsync()
+    {
+        return await _context.AdherenceMetrics.ToListAsync();
+    }
 }
