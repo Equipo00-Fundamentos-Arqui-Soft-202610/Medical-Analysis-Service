@@ -54,11 +54,25 @@ public class HostedEventConsumer : BackgroundService
             ExchangeType.Topic,
             durable: true);
 
-        _channel.QueueDeclare(
-            _options.QueueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false);
+        var dlxName = $"{_options.ExchangeName}.dlx";
+        var dlqName = $"{_options.QueueName}.dlq";
+        _channel.ExchangeDeclare(dlxName, ExchangeType.Fanout, durable: true);
+        _channel.QueueDeclare(dlqName, durable: true, exclusive: false, autoDelete: false);
+        _channel.QueueBind(dlqName, dlxName, routingKey: "");
+
+        var mainQueueArgs = new Dictionary<string, object> { { "x-dead-letter-exchange", dlxName } };
+        try
+        {
+            _channel.QueueDeclare(_options.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: mainQueueArgs);
+        }
+        catch (RabbitMQ.Client.Exceptions.OperationInterruptedException)
+        {
+            _logger.LogWarning("La cola {QueueName} existía con argumentos distintos; se recrea con soporte de DLQ.", _options.QueueName);
+            _channel = _connection!.CreateModel();
+            _channel.ExchangeDeclare(_options.ExchangeName, ExchangeType.Topic, durable: true);
+            _channel.QueueDelete(_options.QueueName);
+            _channel.QueueDeclare(_options.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: mainQueueArgs);
+        }
 
         // Treatment-service publica la creación de recetas con la routing key
         // "PrescriptionCreated" (PrescriptionCreatedEvent), no "PrescriptionLoaded"
@@ -173,8 +187,20 @@ public class HostedEventConsumer : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message with routing key: {RoutingKey}", routingKey);
-                _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                if (ea.Redelivered)
+                {
+                    _logger.LogError(ex,
+                        "Error persistente procesando routing key {RoutingKey} tras reintento; se envía a DLQ.",
+                        routingKey);
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+                }
+                else
+                {
+                    _logger.LogWarning(ex,
+                        "Error procesando routing key {RoutingKey}; se reintenta una vez.",
+                        routingKey);
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                }
             }
         };
 
