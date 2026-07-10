@@ -1,0 +1,19 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "server=127.0.0.1;port=3306;database=AnalysisDB;user=root;password=root"
+  },
+  "Jwt": {
+    "Key": "CHANGE_ME_same_key_as_gateway_and_identity_service_min_32_chars",
+    "Issuer": "meditrack-gateway",
+    "Audience": "meditrack-services"
+  },
+  "RabbitMq": {
+    "Host": "localhost",
+    "Port": 5672,
+    "UserName": "guest",
+    "Password": "guest",
+    "VirtualHost": "/",
+    "ExchangeName": "meditrack.events",
+    "QueueName": "analysis-service.events"
+  }
+}
