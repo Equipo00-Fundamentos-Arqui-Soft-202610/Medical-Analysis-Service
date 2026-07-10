@@ -2,6 +2,9 @@ using System.Text;
 using System.Text.Json;
 using MediTrack.MedicalAnalysisService.API.Application.Internal.EventHandlers;
 using MediTrack.MedicalAnalysisService.API.Domain.Model.Events;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -90,6 +93,28 @@ public class HostedEventConsumer : BackgroundService
 
                 using var scope = _scopeFactory.CreateScope();
 
+                var hasMessageId = Guid.TryParse(ea.BasicProperties.MessageId, out var messageId);
+                if (!hasMessageId)
+                {
+                    _logger.LogWarning(
+                        "Mensaje con routing key {RoutingKey} sin MessageId válido; se omite la verificación de duplicados.",
+                        routingKey);
+                }
+
+                MedicalAnalysisDbContext? context = null;
+                if (hasMessageId)
+                {
+                    context = scope.ServiceProvider.GetRequiredService<MedicalAnalysisDbContext>();
+
+                    var alreadyProcessed = await context.ProcessedEvents.AnyAsync(e => e.EventId == messageId);
+                    if (alreadyProcessed)
+                    {
+                        _logger.LogInformation("Mensaje {MessageId} ya procesado; se omite.", messageId);
+                        _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                        return;
+                    }
+                }
+
                 switch (routingKey)
                 {
                     case "ComplianceRegistered":
@@ -128,12 +153,28 @@ public class HostedEventConsumer : BackgroundService
                         return;
                 }
 
+                if (hasMessageId && context != null)
+                {
+                    context.ProcessedEvents.Add(new ProcessedEvent
+                    {
+                        EventId = messageId,
+                        EventType = routingKey,
+                        ProcessedAtUtc = DateTime.UtcNow
+                    });
+                    await context.SaveChangesAsync();
+                }
+
+                _channel.BasicAck(ea.DeliveryTag, multiple: false);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error deserializando el mensaje con routing key: {RoutingKey}. Se descarta.", routingKey);
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message with routing key: {RoutingKey}", routingKey);
-                _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
             }
         };
 

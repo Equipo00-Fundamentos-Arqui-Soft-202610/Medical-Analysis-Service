@@ -1,5 +1,6 @@
 using MediTrack.MedicalAnalysisService.API.Domain.Model.Aggregates;
 using MediTrack.MedicalAnalysisService.API.Domain.Model.ValueObjects;
+using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
@@ -13,6 +14,7 @@ public class MedicalAnalysisDbContext : DbContext
     public DbSet<ComplianceStatistic> ComplianceStatistics { get; set; } = null!;
     public DbSet<AdherenceAlert> AdherenceAlerts { get; set; } = null!;
     public DbSet<ClinicalRecord> ClinicalRecords { get; set; } = null!;
+    public DbSet<ProcessedEvent> ProcessedEvents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -183,6 +185,27 @@ public class MedicalAnalysisDbContext : DbContext
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<ProcessedEvent>(entity =>
+        {
+            entity.ToTable("processed_events");
+
+            entity.HasKey(e => e.EventId);
+
+            entity.Property(e => e.EventId)
+                .HasColumnName("event_id")
+                .HasConversion(g => g.ToByteArray(), b => new Guid(b))
+                .HasColumnType("binary(16)");
+
+            entity.Property(e => e.EventType)
+                .HasColumnName("event_type")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ProcessedAtUtc)
+                .HasColumnName("processed_at_utc")
                 .IsRequired();
         });
     }
