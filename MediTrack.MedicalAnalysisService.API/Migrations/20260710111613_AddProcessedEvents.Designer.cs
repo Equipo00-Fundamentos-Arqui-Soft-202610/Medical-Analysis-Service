@@ -3,6 +3,7 @@ using System;
 using MediTrack.MedicalAnalysisService.API.Infrastructure.Persistence.EFC.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediTrack.MedicalAnalysisService.API.Migrations
 {
     [DbContext(typeof(MedicalAnalysisDbContext))]
-    partial class MedicalAnalysisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260710111613_AddProcessedEvents")]
+    partial class AddProcessedEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
