@@ -57,7 +57,10 @@ public class HostedEventConsumer : BackgroundService
             exclusive: false,
             autoDelete: false);
 
-        var routingKeys = new[] { "ComplianceRegistered", "AppointmentAttendanceRegistered", "PrescriptionLoaded" };
+        // Treatment-service publica la creación de recetas con la routing key
+        // "PrescriptionCreated" (PrescriptionCreatedEvent), no "PrescriptionLoaded"
+        // -- con el binding viejo este consumer nunca recibía nada.
+        var routingKeys = new[] { "ComplianceRegistered", "AppointmentAttendanceRegistered", "PrescriptionCreated" };
 
         foreach (var routingKey in routingKeys)
         {
@@ -109,7 +112,7 @@ public class HostedEventConsumer : BackgroundService
                         }
                         break;
                     }
-                    case "PrescriptionLoaded":
+                    case "PrescriptionCreated":
                     {
                         var payload = JsonSerializer.Deserialize<PrescriptionLoadedIntegrationEvent>(json, JsonOptions);
                         if (payload != null)
