@@ -8,4 +8,5 @@ public interface IAdherenceMetricRepository
     Task<AdherenceMetric> UpdateAsync(AdherenceMetric metric);
     Task<AdherenceMetric?> FindByPatientIdAndCategoryAsync(int patientId, string category);
     Task<IEnumerable<AdherenceMetric>> FindByPatientIdAsync(int patientId);
+    Task<IEnumerable<AdherenceMetric>> FindAllAsync();
 }
