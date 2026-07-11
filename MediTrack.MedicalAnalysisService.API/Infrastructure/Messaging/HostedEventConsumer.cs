@@ -34,7 +34,28 @@ public class HostedEventConsumer : BackgroundService
         PropertyNameCaseInsensitive = true
     };
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        // La conexión a RabbitMQ ya no se crea "a pelo": si CloudAMQP está caído
+        // justo al arrancar, antes esto tumbaba TODO el proceso (incluyendo los
+        // endpoints REST del dashboard), no solo este consumidor. Ahora reintenta
+        // con backoff fijo hasta conectar, igual que el resto de los servicios.
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                Connect();
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo conectar a RabbitMQ; se reintenta en 5 segundos.");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+        }
+    }
+
+    private void Connect()
     {
         var factory = new ConnectionFactory
         {
@@ -43,10 +64,13 @@ public class HostedEventConsumer : BackgroundService
             UserName = _options.UserName,
             Password = _options.Password,
             VirtualHost = _options.VirtualHost,
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            RequestedHeartbeat = TimeSpan.FromSeconds(30),
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
         };
 
-        _connection = factory.CreateConnection();
+        _connection = factory.CreateConnection("meditrack-analysis-service");
         _channel = _connection.CreateModel();
 
         _channel.ExchangeDeclare(
@@ -91,14 +115,11 @@ public class HostedEventConsumer : BackgroundService
 
         consumer.Received += async (_, ea) =>
         {
-            var routingKey = ea.BasicProperties.Type;
-
-            if (routingKey == null)
-            {
-                _logger.LogWarning("Received message without Type property. Acknowledging.");
-                _channel.BasicAck(ea.DeliveryTag, multiple: false);
-                return;
-            }
+            // El routing key AMQP real (no BasicProperties.Type, que es un campo que
+            // cada publisher setea "a mano" -- funcionaba antes solo porque los 4
+            // publishers con patrón Outbox lo dejan igual al routing key por
+            // convención implícita, no documentada).
+            var routingKey = ea.RoutingKey;
 
             try
             {
@@ -213,8 +234,6 @@ public class HostedEventConsumer : BackgroundService
             "Connected to RabbitMQ. Consuming from queue {QueueName} on exchange {ExchangeName}",
             _options.QueueName,
             _options.ExchangeName);
-
-        return Task.CompletedTask;
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
