@@ -31,8 +31,20 @@ public class ClinicalDataCommandService : IClinicalDataCommandService
 
     public async Task<string> HandleAsync(ImportClinicalDatasetCommand command)
     {
-        var records = await _datasetProcessor.ProcessAsync(command.DataStream, command.ImportBatchId);
+        var mainRecord = new ClinicalRecord(
+            command.PatientId,
+            command.RecordDate,
+            command.Diagnosis,
+            command.Notes,
+            "dataset",
+            command.ImportBatchId);
+        await _recordRepository.AddAsync(mainRecord);
 
+        var memoryStream = new MemoryStream();
+        await command.DataStream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+
+        var records = await _datasetProcessor.ProcessAsync(memoryStream, command.ImportBatchId);
         foreach (var record in records)
             await _recordRepository.AddAsync(record);
 
