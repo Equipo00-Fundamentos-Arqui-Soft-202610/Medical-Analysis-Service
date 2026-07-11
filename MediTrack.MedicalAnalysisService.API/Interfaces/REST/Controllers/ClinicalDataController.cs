@@ -49,7 +49,12 @@ public class ClinicalDataController : ControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<ActionResult<ImportClinicalDatasetResource>> ImportDataset(IFormFile file)
+    public async Task<ActionResult<ImportClinicalDatasetResource>> ImportDataset(
+        IFormFile file,
+        [FromForm] int patientId,
+        [FromForm] DateTime recordDate,
+        [FromForm] string diagnosis,
+        [FromForm] string? notes)
     {
         try
         {
@@ -57,7 +62,9 @@ public class ClinicalDataController : ControllerBase
                 return BadRequest(new { message = "No file provided" });
 
             var importBatchId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
-            var command = new ImportClinicalDatasetCommand(file.OpenReadStream(), importBatchId);
+            var command = new ImportClinicalDatasetCommand(
+                file.OpenReadStream(), importBatchId,
+                patientId, recordDate, diagnosis, notes);
             await _commandService.HandleAsync(command);
 
             return Accepted(new ImportClinicalDatasetResource(importBatchId));
